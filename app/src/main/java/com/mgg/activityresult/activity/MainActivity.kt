@@ -54,16 +54,20 @@ class MainActivity : AppCompatActivity(), AppStateObserver.OnChangeListener {
             }
             if (mEnableZoomInOut) {
                 updateControllerViewForBig()
-                mVideoView?.pivotX = mVideoView?.width?.toFloat()!! / 2
-                mVideoView?.pivotY = mVideoView?.height?.toFloat()!! / 2
-                mVideoView?.scaleX = 1f
-                mVideoView?.scaleY = 1f
+                mVideoView?.let {
+                    it.pivotX = it.width.toFloat() / 2
+                    it.pivotY = it.height.toFloat() / 2
+                    it.scaleX = 1f
+                    it.scaleY = 1f
+                }
             } else {
                 updateTextureViewForSmall()
-                mVideoView?.pivotX = mVideoView?.width?.toFloat()!!
-                mVideoView?.pivotY = mVideoView?.height?.toFloat()!!
-                mVideoView?.scaleX = 0.5f
-                mVideoView?.scaleY = 0.5f
+                mVideoView?.let {
+                    it.pivotX = it.width.toFloat()
+                    it.pivotY = it.height.toFloat()
+                    it.scaleX = 0.5f
+                    it.scaleY = 0.5f
+                }
             }
             mEnableZoomInOut = !mEnableZoomInOut
         }
@@ -82,12 +86,14 @@ class MainActivity : AppCompatActivity(), AppStateObserver.OnChangeListener {
         mVideoView?.start()
         mVideoView?.setOnPreparedListener { mp ->
             mVideoRatio = mp.videoWidth.toFloat() / mp.videoHeight.toFloat()
-            val screenRatio = mVideoView?.width?.toFloat()!! / mVideoView?.height?.toFloat()!!
-            val scaleX = mVideoRatio / screenRatio
-            if (scaleX >= 1f) {
-                mVideoView?.scaleX = scaleX
-            } else {
-                mVideoView?.scaleY = 1f / scaleX
+            mVideoView?.let {
+                val screenRatio = it.width.toFloat() / it.height.toFloat()
+                val scaleX = mVideoRatio / screenRatio
+                if (scaleX >= 1f) {
+                    mVideoView?.scaleX = scaleX
+                } else {
+                    mVideoView?.scaleY = 1f / scaleX
+                }
             }
             updateControllerViewForBig()
             mp.setWakeMode(applicationContext, PowerManager.PARTIAL_WAKE_LOCK)
@@ -107,14 +113,20 @@ class MainActivity : AppCompatActivity(), AppStateObserver.OnChangeListener {
             updateControllerViewForBig()
             mVideoView?.scaleX = 1f
             mVideoView?.scaleY = 1f
+            mEnableZoomInOut = false
         }
     }
 
-    private fun setVideoContainerWidth(view: View) {
+    private fun setVideoContainerWidthHeight(view: View) {
         val linearParams = view.layoutParams as RelativeLayout.LayoutParams // 取控件textView当前的布局参数
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            linearParams.width = dip2px(150f) // 控件的宽强制设成150
-            linearParams.height = (dip2px(150f) * (1 / mVideoRatio)).toInt()// 控件的宽强制设成150
+            if (mVideoRatio < 1) {
+                linearParams.width = dip2px(150f) // 控件的宽强制设成150
+                linearParams.height = (dip2px(150f) * (1 / mVideoRatio)).toInt()// 控件的宽强制设成150
+            } else {
+                linearParams.width = dip2px(300f) // 控件的宽强制设成150
+                linearParams.height = (dip2px(300f) * (1 / mVideoRatio)).toInt()// 控件的宽强制设成150
+            }
         } else if (resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
             linearParams.width = dip2px(300f) // 控件的宽强制设成300
             linearParams.height = (dip2px(300f) * (1 / mVideoRatio)).toInt()// 控件的宽强制设成150
@@ -127,7 +139,7 @@ class MainActivity : AppCompatActivity(), AppStateObserver.OnChangeListener {
             val params = RelativeLayout.LayoutParams(it.width, it.height)
             params.addRule(RelativeLayout.CENTER_IN_PARENT)
             it.layoutParams = params
-            setVideoContainerWidth(it)
+            setVideoContainerWidthHeight(it)
         }
     }
 
@@ -139,7 +151,7 @@ class MainActivity : AppCompatActivity(), AppStateObserver.OnChangeListener {
             params.marginEnd = dip2px(30f)
             // params.bottomMargin = DisplayUtil.dip2px(30f)
             it.layoutParams = params
-            setVideoContainerWidth(it)
+            setVideoContainerWidthHeight(it)
         }
     }
 
